@@ -13,9 +13,9 @@ numpy
 uuid
 fake-useragent
 python-time
-random
+
 fake_useragent
-pytho-dotenv
+
 webdriver-manager
 scikit-learn
 

@@ -34,13 +34,23 @@ def initialize_driver():
     unique_user_data_dir = os.path.join(tempfile.gettempdir(), f"chrome-{uuid.uuid4()}")
     kill_chrome_processes()
 
+    # chrome_options = Options()
+    # chrome_options.add_argument("--no-sandbox")
+    # chrome_options.add_argument(f"--user-data-dir={unique_user_data_dir}")
+    # chrome_options.add_argument("--single-process")
+    # chrome_options.add_argument("--disable-dev-shm-usage")
+    # chrome_options.add_argument("--remote-debugging-port=9222")
+    # # chrome_options.add_argument("--user-data-dir=/tmp/chrome-data")
+    # chrome_options.add_argument("--headless")
+    # chrome_options.add_argument('--log-level=3')
+    # ua = UserAgent()
+    # chrome_options.add_argument(f"user-agent={ua.random}")
+    
     chrome_options = Options()
     chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument(f"--user-data-dir={unique_user_data_dir}")
-    chrome_options.add_argument("--single-process")
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--remote-debugging-port=9222")
-    # chrome_options.add_argument("--user-data-dir=/tmp/chrome-data")
+    chrome_options.add_argument("--user-data-dir=/tmp/chrome-data")
     chrome_options.add_argument("--headless")
     chrome_options.add_argument('--log-level=3')
     ua = UserAgent()
@@ -59,8 +69,8 @@ def scrape_dynamic_table(driver, lr_length, count, scraping_hours, yes_price, lo
     
     rand = random.randint(2, 4)
 
-    # market_dict = inputs.market_dict
-    # util_functions.market_dict_update(market_dict)
+    market_dict = inputs.market_dict
+    util_functions.market_dict_update(market_dict)
     
     while True:
 

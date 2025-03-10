@@ -8,7 +8,7 @@ lr_length = 5
 hour = 3
 scraping_hours = [45,45]
 yes_price = 85
-count = 1
+count = 0
 
 
 all_markets = {
