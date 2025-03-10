@@ -1,2 +1,2 @@
-# Kalshi Weather Alog
+# Kalshi Weather Algo
 
