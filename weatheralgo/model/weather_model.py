@@ -93,6 +93,7 @@ def scrape_dynamic_table(driver, lr_length, count, scraping_hours, yes_price, lo
                 current_timezone = current_timezone.date()                
                 market_dict[market]['current_timezone'] = current_timezone
                 market_dict[market]['forecasted_high'] = forecasted_high_date
+                market_dict[market]['trade_executed'] = None
                 print(forecasted_high_date)
                 
             forecasted_high_date = market_dict[market]['forecasted_high']       
@@ -104,9 +105,7 @@ def scrape_dynamic_table(driver, lr_length, count, scraping_hours, yes_price, lo
                                                                     expected_high_date=forecasted_high_date,
                                                                     market_dict=market_dict
                                                                     )
-            
-            # scrape = scrape_functions.scrape_temperature(driver=driver, url=url)
-            
+                       
             print(f'forecasted_high_date {forecasted_high_date}')
 
             time.sleep(rand)

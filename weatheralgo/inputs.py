@@ -5,10 +5,10 @@ from weatheralgo import scrape_functions
 import logging
 
 lr_length = 5
-hour = 3
+hour = 7
 scraping_hours = [45,45]
 yes_price = 85
-count = 0
+count = 1
 
 
 all_markets = {
