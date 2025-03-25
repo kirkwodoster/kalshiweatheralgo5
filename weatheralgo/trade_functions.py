@@ -66,10 +66,13 @@ def trade_criteria_met(temperatures: list, lr_length: int,
             regressor = LinearRegression().fit(x, temp_length)
             slope = regressor.coef_
             if slope < 0:
+                trade_execution(market=market, temperatures=temperatures, yes_price=yes_price, count=count, timezone=timezone)
                 logging.info(f"Slope: {slope}")
                 logging.info(f"X: {temp_length}")
                 logging.info(f"Max Temp: {highest_temp}")
-                trade_execution(market=market, temperatures=temperatures, yes_price=yes_price, count=count, timezone=timezone)
+                logging.inf(f"Temperatures: {temperatures}")
+                
+                #consider making it True if trade_execution is trade_execution is True or False
                 return True
             else:
                 return False

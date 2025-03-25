@@ -36,23 +36,8 @@ from weatheralgo import inputs
 
 if __name__ == "__main__":
     
-    
-   
-    # y = util_functions.retrieve_market_dict()
-    # print(y['market_dict']['KXHIGHDEN'])
-    
-
-    # timezone = pytz.timezone("America/Denver")
-    # url = "https://www.weather.gov/wrh/timeseries?site=KDEN&hours=4"
-    # market = "KXHIGHDEN"
-    # scraping_hours = [60,60]
-    # xml_url = "https://forecast.weather.gov/MapClick.php?lat=39.8589&lon=-104.6733&FcstType=digitalDWML"
-    # expected_high_date =  expected_high_date = scrape_functions.xml_scrape(xml_url, timezone)[0]
-    # # market_dict = util_functions.open_market_dict()
-    
-    
     driver =  weather_model.initialize_driver()
-    
+
     scraping_inputs = inputs.scrape_inputs
     
     util_functions.logging_settings()

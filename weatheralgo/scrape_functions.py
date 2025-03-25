@@ -8,15 +8,19 @@ import requests
 import xml.etree.ElementTree as ET
 
 from weatheralgo.clients import client
+from weatheralgo import scrape_functions
+from weatheralgo import trade_functions
+from weatheralgo import util_functions
+
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
     
-def scrape_temperature(driver, url) -> list[str, float]:
+def scrape_temperature(driver, url, timezone) -> list[str, float]:
     
     try:
         driver.get(url)
-        WebDriverWait(driver, 3).until(
+        WebDriverWait(driver, 1).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, 'path[fill="#2caffe"]'))
         )
         path_elements = driver.find_elements(By.CSS_SELECTOR, 'path[fill="#2caffe"]')
@@ -25,12 +29,20 @@ def scrape_temperature(driver, url) -> list[str, float]:
        
         date = [', '.join(i.split(', ')[0:3]) for i in datetemp_list]
         temp = [float(i.split(', ')[-1].split(' ')[0][:-1]) for i in datetemp_list]
+        
+        day = datetime.now(timezone).day
+        
+        date = [i for i,j in zip(date, temp) if datetime.strptime(i, '%A, %b %d, %I:%M %p').day == day]
+        temp = [j for i,j in zip(date, temp) if datetime.strptime(i, '%A, %b %d, %I:%M %p').day == day]
     
         return [date, temp]  # Return date and temperature
         
     except Exception as e:
         logging.error(f"Error scrape_temperature: {e}")
         return None
+    
+def scrape_within_date(timezone, url):
+    ...
 
 
 def xml_scrape(xml_url, timezone):
@@ -53,7 +65,7 @@ def xml_scrape(xml_url, timezone):
 
         denver_today = datetime.now(timezone).day
 
-        next_day_high = forecasted[forecasted['DateTime'].dt.day == denver_today]['Temperature'][::-1].idxmax()
+        next_day_high = forecasted[forecasted['DateTime'].dt.day == denver_today]['Temperature'].idxmax()#[::-1]
         date = forecasted['DateTime'].iloc[next_day_high]
         hour_of_high = forecasted['DateTime'].iloc[next_day_high].hour
         temp_high = forecasted['Temperature'].iloc[next_day_high]
@@ -93,31 +105,28 @@ def trade_today(market, timezone):
     except Exception as e:
         logging.error(f"Error Trade Today: {e}")
 
-def begin_scrape(scraping_hours, expected_high_date, timezone):
+def begin_scrape(scraping_hours, forecasted_high_date, timezone):
     
     try:
         today = datetime.now(timezone)
 
-        start_scrape = today >= expected_high_date - timedelta(minutes=scraping_hours[0])
-        end_scrape = today <= expected_high_date + timedelta(minutes=scraping_hours[1])
+        start_scrape = today >= forecasted_high_date - timedelta(minutes=scraping_hours[0])
+        end_scrape = today <= forecasted_high_date + timedelta(minutes=scraping_hours[1])
+        
+        time_limit_lower = today.hour >= 3
+        time_limit_upper = today.hour <= 23
 
-        if start_scrape and end_scrape:
+        if all([start_scrape, end_scrape, time_limit_lower, time_limit_upper]):
             return True
         else:
             return False
     except Exception as e:
         logging.error(f"Error in begin_scrape: {e}")
 
-def permission_to_scrape(market, timezone, scraping_hours, expected_high_date, market_dict):
-    
-    # timezone_lower = datetime.now(timezone)
-    # timezone_lower_bound = timezone_lower.hour >= 9
-    
-    # timezone_upper = datetime.now(timezone)
-    # timezone_upper_bound = timezone_upper.hour <= 21
-    
+def permission_to_scrape(market, timezone, scraping_hours, forecasted_high_date, market_dict):
+       
     trade_today_check = trade_today(market, timezone)
-    begin_scrape_check = begin_scrape(scraping_hours, expected_high_date, timezone)
+    begin_scrape_check = begin_scrape(scraping_hours, forecasted_high_date, timezone)
     market_dict_check = market_dict[market]['trade_executed'] == None
     
     if all([not trade_today_check, begin_scrape_check, market_dict_check]): #timezone_lower_bound, timezone_upper_bound,
@@ -125,6 +134,53 @@ def permission_to_scrape(market, timezone, scraping_hours, expected_high_date, m
         return True
     else:
         return False
+    
+    
+
+def scrape_trade(market, timezone, scraping_hours, market_dict, driver, url,
+                 lr_length, yes_price, count, forecasted_high_date):
+    
+    permission_scrape = scrape_functions.permission_to_scrape(
+                                                            market=market, 
+                                                            timezone=timezone, 
+                                                            scraping_hours=scraping_hours, 
+                                                            forecasted_high_date=forecasted_high_date,
+                                                            market_dict=market_dict
+                                                            )
+    
+    is_order_filled = util_functions.order_filled(market=market, timezone=timezone)
+    
+    if permission_scrape:
+        scrape = scrape_functions.scrape_temperature(driver=driver, url=url, timezone=timezone)
+        current_temp = scrape[1][-1]
+        temperatures = scrape[1]
+        
+        print(f'Market: {market}')
+        print(f'Current Temp: {current_temp}')
+        print(f'Temperature: {temperatures}')
+        print(f'expected high date {forecasted_high_date}')
+        print(market_dict[market]['trade_executed'])
+        
+        trade_execution = trade_functions.max_or_trade_criteria_met(
+                                                            current_temp=current_temp,
+                                                            market = market, 
+                                                            yes_price=yes_price,
+                                                            count=count,
+                                                            temperatures=temperatures,
+                                                            timezone=timezone,
+                                                            lr_length=lr_length,
+                                                            )
+        
+        if trade_execution:
+            # market_dict[market]['trade_executed'] = trade_execution
+            return trade_execution
+                        
+        if is_order_filled:
+            logging.info(f'Order filled and saved: {market}')
+            
+        
+        
+        
     
         
 

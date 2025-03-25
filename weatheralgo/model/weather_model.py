@@ -31,21 +31,8 @@ def kill_chrome_processes():
 # Initialize Selenium WebDriver
 def initialize_driver():
     
-    unique_user_data_dir = os.path.join(tempfile.gettempdir(), f"chrome-{uuid.uuid4()}")
+    # unique_user_data_dir = os.path.join(tempfile.gettempdir(), f"chrome-{uuid.uuid4()}")
     kill_chrome_processes()
-
-    # chrome_options = Options()
-    # chrome_options.add_argument("--no-sandbox")
-    # chrome_options.add_argument(f"--user-data-dir={unique_user_data_dir}")
-    # chrome_options.add_argument("--single-process")
-    # chrome_options.add_argument("--disable-dev-shm-usage")
-    # chrome_options.add_argument("--remote-debugging-port=9222")
-    # # chrome_options.add_argument("--user-data-dir=/tmp/chrome-data")
-    # chrome_options.add_argument("--headless")
-    # chrome_options.add_argument('--log-level=3')
-    # ua = UserAgent()
-    # chrome_options.add_argument(f"user-agent={ua.random}")
-    
     chrome_options = Options()
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
@@ -62,21 +49,19 @@ def initialize_driver():
 def scrape_dynamic_table(driver, lr_length, count, scraping_hours, yes_price, locations):
     
     util_functions.logging_settings()
-    temperatures = []
     
-    restart_threshold = 40  # Restart WebDriver every 15 iterations
+    restart_threshold = 40  
     loop_counter = 0
     
-    rand = random.randint(2, 4)
-
     market_dict = inputs.market_dict
     util_functions.market_dict_update(market_dict)
     
     while True:
 
+        time.sleep(1)
         model_inputs = inputs.model_input
         market_dict = util_functions.retrieve_market_dict()
-        print(market_dict)
+        # print(market_dict)
         
         for i in locations:
             market, timezone, url, xml_url = model_inputs(i)
@@ -94,68 +79,39 @@ def scrape_dynamic_table(driver, lr_length, count, scraping_hours, yes_price, lo
                 market_dict[market]['current_timezone'] = current_timezone
                 market_dict[market]['forecasted_high'] = forecasted_high_date
                 market_dict[market]['trade_executed'] = None
-                print(forecasted_high_date)
+                # print(forecasted_high_date)
                 
             forecasted_high_date = market_dict[market]['forecasted_high']       
+            # print(f'forecasted_high_date {forecasted_high_date}')
 
-            permission_scrape = scrape_functions.permission_to_scrape(
-                                                                    market=market, 
-                                                                    timezone=timezone, 
-                                                                    scraping_hours=scraping_hours, 
-                                                                    expected_high_date=forecasted_high_date,
-                                                                    market_dict=market_dict
-                                                                    )
-                       
-            print(f'forecasted_high_date {forecasted_high_date}')
-
-            time.sleep(rand)
             try:
-                print(f'Permission Scrape: {permission_scrape} market: {market}')
-                if permission_scrape:
-                    scrape = scrape_functions.scrape_temperature(driver=driver, url=url)
-                    current_temp = scrape[1][-1]
-                    temperatures = scrape[1]
+                scrape_and_trade = scrape_functions.scrape_trade(
+                                                                 market=market, 
+                                                                 timezone=timezone, 
+                                                                 scraping_hours=scraping_hours, 
+                                                                 forecasted_high_date=forecasted_high_date,
+                                                                 market_dict=market_dict,
+                                                                 yes_price=yes_price,
+                                                                 count=count,
+                                                                 lr_length=lr_length,
+                                                                 driver=driver,
+                                                                 url=url
+                                                                 )
+                if scrape_and_trade:
+                    market_dict[market]['trade_executed'] = scrape_and_trade
+                    loop_counter += 1
+                    if loop_counter >= restart_threshold:
+                        # logging.info("Restarting WebDriver to prevent stale sessions...")
+                        driver.quit()
+                        driver = initialize_driver()
+                        loop_counter = 0  # Reset counter
                     
-                    print(f'Market: {market}')
-                    print(f'Current Temp: {current_temp}')
-                    print(f'Temperature: {temperatures}')
-                    print(f'expected high date {forecasted_high_date}')
-                    print(market_dict[market]['trade_executed'])
-                    
-                    trade_execution = trade_functions.max_or_trade_criteria_met(
-                                                                                current_temp=current_temp,
-                                                                                market = market, 
-                                                                                yes_price=yes_price,
-                                                                                count=count,
-                                                                                temperatures=temperatures,
-                                                                                timezone=timezone,
-                                                                                lr_length=lr_length,
-                                                                              )
-                    
-                    if trade_execution:
-                        market_dict[market]['trade_executed'] = trade_execution
-                        
                 util_functions.market_dict_update(market_dict=market_dict)
- 
 
-                time.sleep(rand)    
-                    
-                is_order_filled = util_functions.order_filled(market=market, timezone=timezone)
-                    
-                if is_order_filled:
-                    logging.info(f'Order filled and saved: {market}')
-                else:
-                    continue
-        
             except Exception as e:
                 logging.error(f"in main loop: {e}")
 
-        loop_counter += 1
-        if loop_counter >= restart_threshold:
-            logging.info("Restarting WebDriver to prevent stale sessions...")
-            driver.quit()
-            driver = initialize_driver()
-            loop_counter = 0  # Reset counter
+      
 
         
-        time.sleep(rand)
+
