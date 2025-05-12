@@ -17,7 +17,7 @@ def market_above_1(market_ticker: str):
     orders = client.get_order_book(market_ticker)
     above_1 = orders['orderbook']['yes']
     
-    if above_1 != None:
+    if above_1 != 'None':
         return True
         
     
