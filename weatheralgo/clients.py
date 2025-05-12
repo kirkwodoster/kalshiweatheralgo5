@@ -212,6 +212,27 @@ class KalshiHttpClient(KalshiBaseClient):
         
         # Perform the GET request
         return self.get(url, params=params)
+    
+    def get_order_book(
+        self,
+        event_ticker: str = Required,
+        depth: Optional[int] = None
+    ) -> Dict[str, Any]:
+        """Retrieves order book based on the provided event ticker."""
+        # Construct the URL path with the event ticker
+        url = f"{self.markets_url}/{event_ticker}/orderbook"
+        
+        # Define the query parameters
+        params = {
+            'depth': depth,
+        }
+        
+        # Remove None values from the params dictionary
+        params = {k: v for k, v in params.items() if v is not None}
+        
+        # Perform the GET request
+        return self.get(url, params=params)
+    
 
 
     def get_trades(
