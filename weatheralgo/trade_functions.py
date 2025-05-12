@@ -12,6 +12,16 @@ from weatheralgo import util_functions
 
 
 
+def market_above_1(market_ticker: str):
+   
+    orders = client.get_order_book(market_ticker)
+    above_1 = orders['orderbook']['yes']
+    
+    if above_1 != None:
+        return True
+        
+    
+
 def trade_execution(market: str, temperatures: list, yes_price: int, count: int, timezone):
     try:
         highest_temp = np.array(temperatures).max()
@@ -21,7 +31,9 @@ def trade_execution(market: str, temperatures: list, yes_price: int, count: int,
         balance_min = count * yes_price
         balance = client.get_balance()['balance'] > balance_min
         
-        if balance:          
+        trade_above_1 = market_above_1(market_ticker=market_ticker)
+        
+        if balance and trade_above_1:          
             logging.info('order_pipeline worked')
             order_id = str(uuid.uuid4())
             client.create_order(ticker=market_ticker, client_order_id=order_id,  yes_price=yes_price, count=count)
@@ -70,7 +82,7 @@ def trade_criteria_met(temperatures: list, lr_length: int,
                 logging.info(f"Slope: {slope}")
                 logging.info(f"X: {temp_length}")
                 logging.info(f"Max Temp: {highest_temp}")
-                logging.inf(f"Temperatures: {temperatures}")
+                logging.info(f"Temperatures: {temperatures}")
                 
                 #consider making it True if trade_execution is trade_execution is True or False
                 return True
