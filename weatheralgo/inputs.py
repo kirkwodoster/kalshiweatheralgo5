@@ -16,7 +16,7 @@ all_markets = {
                 "SERIES": "KXHIGHDEN",
                 "TIMEZONE":"America/Denver",
                 "URL": f"https://www.weather.gov/wrh/timeseries?site=KDEN&hours={hour}",
-                "XML_URL": "https://forecast.weather.gov/MapClick.php?lat=39.8589&lon=-104.6733&FcstType=digitalDWML",
+                "XML_URL": "https://forecast.weather.gov/MapClick.php?lat=39.8466&lon=-104.6562&FcstType=digitalDWML",
             },
             "CHICAGO": {
                 "SERIES": "KXHIGHCHI",
